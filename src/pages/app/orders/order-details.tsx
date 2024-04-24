@@ -1,52 +1,69 @@
+import { getOrderDetails } from "@/api/get-order-details";
+import { OrderStatus } from "@/components/order-status";
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useQuery } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
-export function OrderDetails() {
+export interface OrderDetailsProps {
+    orderId: string
+    open: boolean
+}
+
+export function OrderDetails({ orderId, open }: OrderDetailsProps) {
+    const {data: order} = useQuery({
+        queryKey: ['order', orderId],
+        queryFn: () => getOrderDetails({ orderId }),
+        enabled: open,
+    })
+
     return (
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Pedido: 56asd156asd1</DialogTitle>
+                <DialogTitle>Pedido: {orderId}</DialogTitle>
                 <DialogDescription>Detalhes do pedido</DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-6">
+            {order && (
+                <div className="space-y-6">
                 <Table>
                     <TableBody>
                         <TableRow>
                             <TableCell className="text-muted-foreground">Status</TableCell>
                             <TableCell className="flex justify-end">
-                                <div className="flex items-center gap-2">
-                                    <span className="h-2 w-2 rounded-full bg-slate-400" />
-                                    <span className="font-medium text-muted-foreground">Pendente</span>
-                                </div>
+                                <OrderStatus status={order.status} />
                             </TableCell>
                         </TableRow>
 
                         <TableRow>
                             <TableCell className="text-muted-foreground">Cliente</TableCell>
                             <TableCell className="flex justify-end">
-                                Clelton José Mielke
+                                {order.customer.name}
                             </TableCell>
                         </TableRow>
 
                         <TableRow>
                             <TableCell className="text-muted-foreground">Telefone</TableCell>
                             <TableCell className="flex justify-end">
-                                (27) 99999-9999
+                                {order.customer.phone ?? 'Não informado'}
                             </TableCell>
                         </TableRow>
 
                         <TableRow>
                             <TableCell className="text-muted-foreground">E-mail</TableCell>
                             <TableCell className="flex justify-end">
-                                cleltonjm_95@hotmail.com
+                                {order.customer.email}  
                             </TableCell>
                         </TableRow>
 
                         <TableRow>
                             <TableCell className="text-muted-foreground">Realizado há</TableCell>
                             <TableCell className="flex justify-end">
-                                há 3 minutos
+                                {formatDistanceToNow(order.createdAt, {
+                                    locale: ptBR,
+                                    addSuffix: true,
+                                })}
                             </TableCell>
                         </TableRow>
                     </TableBody>
@@ -62,30 +79,28 @@ export function OrderDetails() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableRow>
-                            <TableCell>Pizza Pepperoni Família</TableCell>
-                            <TableCell className="text-right">2</TableCell>
-                            <TableCell className="text-right">R$ 69,90</TableCell>
-                            <TableCell className="text-right">R$ 139,80</TableCell>
-                        </TableRow>
-
-                        <TableRow>
-                            <TableCell>Pizza Mussarela Família</TableCell>
-                            <TableCell className="text-right">2</TableCell>
-                            <TableCell className="text-right">R$ 59,90</TableCell>
-                            <TableCell className="text-right">R$ 119,80</TableCell>
-                        </TableRow>
+                        {order.orderItems.map(item => {
+                            return (
+                                <TableRow key={item.id}>
+                                    <TableCell>{item.product.name}</TableCell>
+                                    <TableCell className="text-right">{item.quantity}</TableCell>
+                                    <TableCell className="text-right">{(item.priceInCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                                    <TableCell className="text-right">{(item.priceInCents * item.quantity / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                                </TableRow>
+                            )
+                        })}
                     </TableBody>
                     <TableFooter>
                         <TableRow>
                             <TableCell colSpan={3}>Total do pedido</TableCell>
                             <TableCell className="text-right font-medium">
-                                R$ 259,60
+                                {(order.totalInCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                             </TableCell>
                         </TableRow>
                     </TableFooter>
                 </Table>
-            </div>
+                </div>
+            )}
         </DialogContent>
     )
 }
