@@ -1,22 +1,17 @@
-import { api } from "@/lib/axios";
+import { api } from '@/lib/axios'
 
-export interface RegisterRestaurant {
-    restaurantName: string
-    managerName: string
-    email: string
-    phone: string
+export interface RegisterRestaurantBody {
+  restaurantName: string
+  managerName: string
+  email: string
+  phone: string
 }
 
-export async function RegisterRestaurant({ 
-    restaurantName,
-    managerName,
-    email,
-    phone 
-}: RegisterRestaurant) {
-    await api.post('/authenticate', { 
-        restaurantName,
-        managerName,
-        email,
-        phone 
-     })
+export async function registerRestaurant({
+  email,
+  managerName,
+  phone,
+  restaurantName,
+}: RegisterRestaurantBody) {
+  await api.post('/restaurants', { email, managerName, phone, restaurantName })
 }
