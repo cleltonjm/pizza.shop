@@ -12,7 +12,7 @@ export interface GetOrdersResponse {
         orderId: string
         createdAt: string
         status: 'pending' | 'canceled' | 'processing' | 'delivering' | 'delivered'
-        customName: string
+        customerName: string
         total: number
     }[]
     meta: {
